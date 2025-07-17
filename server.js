@@ -24,6 +24,7 @@ const User = mongoose.model('User', new mongoose.Schema({
 }));
 
 app.post('/register', async (req, res) => {
+  console.log("REGISTER BODY:", req.body);
   const { username, email, password, fullname, phone } = req.body;
 
   // Basic validation
