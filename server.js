@@ -1,3 +1,20 @@
+const mongoose = require('mongoose');
+
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log('MongoDB connected'))
+.catch(err => console.error('MongoDB connection error:', err));
+
+const User = mongoose.model('User', new mongoose.Schema({
+  username: String,
+  password: String,
+  email: String,
+  fullname: String,
+  phone: String
+}));
+
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -8,17 +25,20 @@ app.use(express.json());
 
 const users = [];
 
-app.post('/register', (req, res) => {
-  const { username, password } = req.body;
+app.post('/register', async (req, res) => {
+  const { username, email } = req.body;
 
-  const exists = users.find(u => u.username === username);
-  if (exists) {
-    return res.status(400).json({ success: false, message: 'Username already exists' });
+  // Check for duplicates
+  const existing = await User.findOne({ $or: [ { username }, { email } ] });
+  if (existing) {
+    return res.status(400).json({ success: false, message: 'User already exists' });
   }
 
-  users.push({ username, password });
-  res.json({ success: true, message: 'Registration successful!' });
+  const user = new User(req.body);
+  await user.save();
+  res.json({ success: true, message: 'Registered successfully!' });
 });
+
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
