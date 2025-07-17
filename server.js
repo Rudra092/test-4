@@ -24,27 +24,23 @@ const User = mongoose.model('User', new mongoose.Schema({
 }));
 
 app.post('/register', async (req, res) => {
-  console.log("Received register data:", req.body);  // ADD THIS
+  const { username, email, password, fullname, phone } = req.body;
 
-  const { username, email } = req.body;
-
-  if (!username || !email) {
-    return res.status(400).json({ success: false, message: 'Username or email missing' });
+  // Basic validation
+  if (!username || !email || !password) {
+    return res.status(400).json({ success: false, message: 'All fields are required.' });
   }
 
   const existing = await User.findOne({ $or: [{ username }, { email }] });
-  console.log("Existing user found:", existing);  // ADD THIS
-
   if (existing) {
     return res.status(400).json({ success: false, message: 'User already exists' });
   }
 
-  const user = new User(req.body);
+  const user = new User({ username, email, password, fullname, phone });
   await user.save();
 
   res.json({ success: true, message: 'Registered successfully!' });
 });
-
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
