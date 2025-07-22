@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const nodemailer = require('nodemailer');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -56,6 +58,68 @@ app.post('/login', async (req, res) => {
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// In-memory OTP store
+const otps = {};
+
+// Nodemailer setup
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER, // your@gmail.com
+    pass: process.env.EMAIL_PASS  // app password (not Gmail password)
+  }
+});
+
+// Route: Request OTP
+app.post('/request-otp', async (req, res) => {
+  const { email } = req.body;
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  otps[email] = otp;
+
+  try {
+    await transporter.sendMail({
+      from: `"My App" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Password Reset OTP',
+      html: `<p>Your OTP is: <strong>${otp}</strong></p>`
+    });
+
+    res.json({ success: true, message: 'OTP sent to email' });
+  } catch (err) {
+    console.error('Email send error:', err);
+    res.status(500).json({ success: false, message: 'Failed to send OTP' });
+  }
+});
+
+// Route: Verify OTP
+app.post('/verify-otp', (req, res) => {
+  const { email, otp } = req.body;
+
+  if (otps[email] === otp) {
+    res.json({ success: true });
+  } else {
+    res.json({ success: false, message: 'Invalid OTP' });
+  }
+});
+
+// Route: Reset Password
+app.post('/reset-password', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOneAndUpdate({ email }, { password });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    delete otps[email];
+    res.json({ success: true, message: 'Password reset successfully' });
+  } catch (err) {
+    console.error('Reset error:', err);
+    res.status(500).json({ success: false, message: 'Failed to reset password' });
   }
 });
 
