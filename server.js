@@ -7,16 +7,18 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({ origin: '*' })); // allow requests from any origin
 app.use(express.json());
 
+// MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => console.log('MongoDB connected'))
-.catch(err => console.error('MongoDB connection error:', err));
+.then(() => console.log('✅ MongoDB connected'))
+.catch(err => console.error('❌ MongoDB connection error:', err));
 
+// User model
 const User = mongoose.model('User', new mongoose.Schema({
   username: String,
   password: String,
@@ -25,11 +27,22 @@ const User = mongoose.model('User', new mongoose.Schema({
   phone: String
 }));
 
+// In-memory OTP store (use DB or Redis in production)
+const otps = {};
+
+// Nodemailer setup (Gmail App Passwords required)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+// 🔐 Register
 app.post('/register', async (req, res) => {
-  console.log("REGISTER BODY:", req.body);
   const { username, email, password, fullname, phone } = req.body;
 
-  // Basic validation
   if (!username || !email || !password) {
     return res.status(400).json({ success: false, message: 'All fields are required.' });
   }
@@ -45,6 +58,7 @@ app.post('/register', async (req, res) => {
   res.json({ success: true, message: 'Registered successfully!' });
 });
 
+// 🔐 Login
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -61,19 +75,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// In-memory OTP store
-const otps = {};
-
-// Nodemailer setup
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER, // your@gmail.com
-    pass: process.env.EMAIL_PASS  // app password (not Gmail password)
-  }
-});
-
-// Route: Request OTP
+// 📧 Request OTP
 app.post('/request-otp', async (req, res) => {
   const { email } = req.body;
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -94,7 +96,7 @@ app.post('/request-otp', async (req, res) => {
   }
 });
 
-// Route: Verify OTP
+// ✅ Verify OTP
 app.post('/verify-otp', (req, res) => {
   const { email, otp } = req.body;
 
@@ -105,7 +107,7 @@ app.post('/verify-otp', (req, res) => {
   }
 });
 
-// Route: Reset Password
+// 🔁 Reset Password
 app.post('/reset-password', async (req, res) => {
   const { email, password } = req.body;
 
@@ -123,4 +125,4 @@ app.post('/reset-password', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
