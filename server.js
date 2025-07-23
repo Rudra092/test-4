@@ -2,20 +2,17 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
-require('dotenv').config();
 const http = require('http');
 const { Server } = require('socket.io');
+require('dotenv').config();
 // Setup Express + HTTP + Socket.IO
+const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: '*'
   }
 });
-
-
-const app = express();
-const PORT = process.env.PORT || 3000;
 
 app.use(cors({ origin: '*' })); // allow requests from any origin
 app.use(express.json());
@@ -181,6 +178,6 @@ app.put('/update-profile/:id', async (req, res) => {
   }
 });
 
-
+const PORT = process.env.PORT || 3000;
 // Use this instead of app.listen
 server.listen(PORT, () => console.log(`🚀 Server running with socket.io on port ${PORT}`));
