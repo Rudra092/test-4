@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f7fb;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: #1f2937;
+      color: #fff;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar h3 {
+      margin: 0 0 1rem;
+      font-size: 1.2rem;
+      border-bottom: 1px solid #444;
+      padding-bottom: 0.5rem;
+    }
+
+    .users {
+      list-style: none;
+      padding: 0;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .users li {
+      margin-bottom: 10px;
+      background: #374151;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .header {
+      padding: 20px;
+      font-size: 1.2rem;
+      background: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bubble {
+      max-width: 70%;
+      padding: 12px 16px;
+      background: #e5e7eb;
+      border-radius: 18px;
+      align-self: flex-start;
+      font-size: 0.95rem;
+      word-wrap: break-word;
+    }
+
+    .bubble.self {
+      background: #3b82f6;
+      color: #fff;
+      align-self: flex-end;
+    }
+
+    form {
+      display: flex;
+      padding: 15px;
+      background: #fff;
+      border-top: 1px solid #ddd;
+      position: sticky;
+      bottom: 0;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-right: 10px;
+    }
+
+    button {
+      background: #3b82f6;
+      border: none;
+      color: white;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 10px;
+        overflow-x: auto;
+      }
+      .users li {
+        margin: 5px;
+        padding: 8px 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <h3>Online Users</h3>
+    <ul id="userList" class="users"></ul>
+  </div>
+
+  <div class="main">
+    <div class="header">Welcome, <span id="username"></span> 👋</div>
+    <div class="messages" id="messages"></div>
+    <form id="chatForm">
+      <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off" />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+<script>
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (!user) {
+    alert("You are not logged in.");
+    window.location.href = "index.html";
+  }
+
+  const username = user.fullname || user.username;
+  document.getElementById("username").textContent = username;
+
+  const socket = io("https://test-4-jqdf.onrender.com"); // your backend URL
+  socket.emit("user-connected", username);
+
+  socket.on("online-users", (users) => {
+    const list = document.getElementById("userList");
+    list.innerHTML = "";
+    users.forEach(name => {
+      const li = document.createElement("li");
+      li.textContent = name;
+      list.appendChild(li);
+    });
+  });
+
+  socket.on("chat-message", (msg) => {
+    const messages = document.getElementById("messages");
+    const div = document.createElement("div");
+    div.className = "bubble";
+    if (msg.startsWith(username + ":")) div.classList.add("self");
+    div.textContent = msg;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+  });
+
+  document.getElementById("chatForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("messageInput");
+    const message = `${username}: ${input.value}`;
+    socket.emit("chat-message", message);
+    input.value = "";
+  });
+</script>
+</body>
+</html>
