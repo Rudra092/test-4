@@ -3,12 +3,45 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
+const http = require('http');
+const { Server } = require('socket.io');
+// Setup Express + HTTP + Socket.IO
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*'
+  }
+});
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors({ origin: '*' })); // allow requests from any origin
 app.use(express.json());
+
+let onlineUsers = {};
+
+io.on('connection', (socket) => {
+  console.log('🔌 New client connected:', socket.id);
+
+  // When user logs in and sends their name
+  socket.on('user-connected', (user) => {
+    onlineUsers[socket.id] = user;
+    io.emit('online-users', Object.values(onlineUsers));
+  });
+
+  // When user sends a message
+  socket.on('chat-message', (msg) => {
+    io.emit('chat-message', msg); // broadcast to all
+  });
+
+  // When user disconnects
+  socket.on('disconnect', () => {
+    delete onlineUsers[socket.id];
+    io.emit('online-users', Object.values(onlineUsers));
+  });
+});
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
@@ -149,4 +182,5 @@ app.put('/update-profile/:id', async (req, res) => {
 });
 
 
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// Use this instead of app.listen
+server.listen(PORT, () => console.log(`🚀 Server running with socket.io on port ${PORT}`));
