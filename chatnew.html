@@ -38,16 +38,20 @@
     .users {
       list-style: none;
       padding: 0;
-      flex: 1;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       overflow-y: auto;
+      flex: 1;
     }
 
     .users li {
-      margin-bottom: 10px;
       background: #374151;
       padding: 10px;
       border-radius: 6px;
       font-size: 0.95rem;
+      text-align: center;
     }
 
     .main {
@@ -121,16 +125,36 @@
       body {
         flex-direction: column;
       }
+
       .sidebar {
         width: 100%;
-        flex-direction: row;
-        flex-wrap: wrap;
         padding: 10px;
+        flex-direction: row;
+        align-items: center;
         overflow-x: auto;
+        gap: 10px;
       }
+
+      .sidebar h3 {
+        display: none;
+      }
+
+      .users {
+        flex-direction: row;
+        gap: 12px;
+      }
+
       .users li {
-        margin: 5px;
-        padding: 8px 12px;
+        background: #3b82f6;
+        color: white;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        line-height: 50px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 0.9rem;
+        flex-shrink: 0;
       }
     }
   </style>
@@ -161,15 +185,18 @@
   const username = user.fullname || user.username;
   document.getElementById("username").textContent = username;
 
-  const socket = io("https://test-4-jqdf.onrender.com"); // your backend URL
+  const socket = io("https://test-4-jqdf.onrender.com"); // Change to your backend URL
   socket.emit("user-connected", username);
 
   socket.on("online-users", (users) => {
     const list = document.getElementById("userList");
     list.innerHTML = "";
+
     users.forEach(name => {
       const li = document.createElement("li");
-      li.textContent = name;
+      const isMobile = window.innerWidth <= 768;
+      li.textContent = isMobile ? name.charAt(0).toUpperCase() : name;
+      li.title = name;
       list.appendChild(li);
     });
   });
