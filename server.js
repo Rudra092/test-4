@@ -94,9 +94,14 @@ app.post('/login', async (req, res) => {
   try {
     const found = await User.findOne({ username, password });
 
-    if (found) {
-      res.json({ success: true, message: 'Login successful!' });
-    } else {
+if (found) {
+  res.json({
+    success: true,
+    message: 'Login successful!',
+    user: found
+  });
+}
+ else {
       res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
   } catch (err) {
