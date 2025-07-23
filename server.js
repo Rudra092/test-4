@@ -125,4 +125,28 @@ app.post('/reset-password', async (req, res) => {
   }
 });
 
+// ✅ Fetch current user by ID
+app.get('/me/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id, '-password');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// ✅ Update user profile
+app.put('/update-profile/:id', async (req, res) => {
+  const { fullname, email, phone } = req.body;
+  try {
+    const user = await User.findByIdAndUpdate(req.params.id, { fullname, email, phone }, { new: true });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({ success: true, message: 'Profile updated!', user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Update failed' });
+  }
+});
+
+
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

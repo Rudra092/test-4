@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Profile</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .profile-box {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+    h2 {
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      width: 100%;
+      background: #007bff;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      margin-top: 1rem;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .logout {
+      background: crimson;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="profile-box">
+    <h2>My Profile</h2>
+    <form id="profileForm">
+      <input type="text" id="fullname" name="fullname" placeholder="Full Name" required />
+      <input type="email" id="email" name="email" placeholder="Email" required />
+      <input type="tel" id="phone" name="phone" placeholder="Phone" />
+      <button type="submit">Update Profile</button>
+    </form>
+    <button class="logout" onclick="logout()">Logout</button>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+      alert("Not logged in.");
+      window.location.href = "index.html";
+    }
+
+    // Load existing user data
+    fetch(`https://test-2-cyfq.onrender.com/me/${user._id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById('fullname').value = data.user.fullname || '';
+          document.getElementById('email').value = data.user.email || '';
+          document.getElementById('phone').value = data.user.phone || '';
+        }
+      });
+
+    // Handle update
+    document.getElementById('profileForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const updated = {
+        fullname: e.target.fullname.value,
+        email: e.target.email.value,
+        phone: e.target.phone.value
+      };
+
+      const res = await fetch(`https://test-2-cyfq.onrender.com/update-profile/${user._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated)
+      });
+
+      const result = await res.json();
+      alert(result.message);
+      if (result.success) {
+        localStorage.setItem("user", JSON.stringify(result.user));
+      }
+    };
+
+    function logout() {
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
