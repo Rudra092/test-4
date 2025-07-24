@@ -207,17 +207,23 @@ socket.on("chat-message", (msg) => {
 
   // Wait until message is rendered before scrolling
 setTimeout(() => {
-  messages.scrollTo({ top: messages.scrollHeight, behavior: 'smooth' });
+  messages.scrollTop = messages.scrollHeight;
 }, 0);
 });
 
-  document.getElementById("chatForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const input = document.getElementById("messageInput");
-    const message = `${username}: ${input.value}`;
-    socket.emit("chat-message", message);
-    input.value = "";
-  });
+document.getElementById("chatForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const input = document.getElementById("messageInput");
+  const message = `${username}: ${input.value}`;
+  socket.emit("chat-message", message);
+  input.value = "";
+
+  setTimeout(() => {
+    const messages = document.getElementById("messages");
+    messages.scrollTop = messages.scrollHeight;
+  }, 0);
+});
+
 </script>
 </body>
 </html>
