@@ -199,16 +199,23 @@
 
 socket.on("chat-message", (msg) => {
   const messages = document.getElementById("messages");
+
+  // Check if user is near the bottom (within 100px)
+  const isAtBottom = messages.scrollHeight - messages.scrollTop - messages.clientHeight < 100;
+
+  // Create and append message
   const div = document.createElement("div");
   div.className = "bubble";
   if (msg.startsWith(username + ":")) div.classList.add("self");
   div.textContent = msg;
   messages.appendChild(div);
 
-  // Wait until message is rendered before scrolling
-setTimeout(() => {
-  messages.scrollTop = messages.scrollHeight;
-}, 0);
+  // Scroll only if user was already at bottom
+  if (isAtBottom) {
+    setTimeout(() => {
+      messages.scrollTop = messages.scrollHeight;
+    }, 0);
+  }
 });
 
 document.getElementById("chatForm").addEventListener("submit", (e) => {
