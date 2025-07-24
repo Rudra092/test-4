@@ -200,9 +200,6 @@
 socket.on("chat-message", (msg) => {
   const messages = document.getElementById("messages");
 
-  // Capture scroll state BEFORE adding the message
-  const isAtBottom = Math.abs(messages.scrollTop + messages.clientHeight - messages.scrollHeight) < 20;
-
   // Create and append message
   const div = document.createElement("div");
   div.className = "bubble";
@@ -210,15 +207,11 @@ socket.on("chat-message", (msg) => {
   div.textContent = msg;
   messages.appendChild(div);
 
-  // Scroll only if user was at the bottom before the new message
-  if (isAtBottom) {
-    // Wait until DOM has updated
-    requestAnimationFrame(() => {
-      messages.scrollTop = messages.scrollHeight;
-    });
-  }
+  // Always scroll to bottom after message added
+  requestAnimationFrame(() => {
+    messages.scrollTop = messages.scrollHeight;
+  });
 });
-
 
 document.getElementById("chatForm").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -234,6 +227,7 @@ window.addEventListener("load", () => {
     messages.scrollTop = messages.scrollHeight;
   });
 });
+
 
 </script>
 </body>
