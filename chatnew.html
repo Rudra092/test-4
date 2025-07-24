@@ -228,6 +228,12 @@ document.getElementById("chatForm").addEventListener("submit", (e) => {
   input.value = "";
 });
 
+window.addEventListener("load", () => {
+  const messages = document.getElementById("messages");
+  requestAnimationFrame(() => {
+    messages.scrollTop = messages.scrollHeight;
+  });
+});
 
 </script>
 </body>
