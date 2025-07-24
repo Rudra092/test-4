@@ -197,15 +197,19 @@
     });
   });
 
-  socket.on("chat-message", (msg) => {
-    const messages = document.getElementById("messages");
-    const div = document.createElement("div");
-    div.className = "bubble";
-    if (msg.startsWith(username + ":")) div.classList.add("self");
-    div.textContent = msg;
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
-  });
+socket.on("chat-message", (msg) => {
+  const messages = document.getElementById("messages");
+  const div = document.createElement("div");
+  div.className = "bubble";
+  if (msg.startsWith(username + ":")) div.classList.add("self");
+  div.textContent = msg;
+  messages.appendChild(div);
+
+  // Wait until message is rendered before scrolling
+setTimeout(() => {
+  messages.scrollTo({ top: messages.scrollHeight, behavior: 'smooth' });
+}, 0);
+});
 
   document.getElementById("chatForm").addEventListener("submit", (e) => {
     e.preventDefault();
