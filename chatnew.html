@@ -200,8 +200,8 @@
 socket.on("chat-message", (msg) => {
   const messages = document.getElementById("messages");
 
-  // Check if user is near the bottom (within 100px)
-  const isAtBottom = messages.scrollHeight - messages.scrollTop - messages.clientHeight < 100;
+  // Capture scroll state BEFORE adding the message
+  const isAtBottom = Math.abs(messages.scrollTop + messages.clientHeight - messages.scrollHeight) < 20;
 
   // Create and append message
   const div = document.createElement("div");
@@ -210,13 +210,15 @@ socket.on("chat-message", (msg) => {
   div.textContent = msg;
   messages.appendChild(div);
 
-  // Scroll only if user was already at bottom
+  // Scroll only if user was at the bottom before the new message
   if (isAtBottom) {
-    setTimeout(() => {
+    // Wait until DOM has updated
+    requestAnimationFrame(() => {
       messages.scrollTop = messages.scrollHeight;
-    }, 0);
+    });
   }
 });
+
 
 document.getElementById("chatForm").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -224,12 +226,8 @@ document.getElementById("chatForm").addEventListener("submit", (e) => {
   const message = `${username}: ${input.value}`;
   socket.emit("chat-message", message);
   input.value = "";
-
-  setTimeout(() => {
-    const messages = document.getElementById("messages");
-    messages.scrollTop = messages.scrollHeight;
-  }, 0);
 });
+
 
 </script>
 </body>
