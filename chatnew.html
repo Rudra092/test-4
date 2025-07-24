@@ -15,7 +15,7 @@
       font-family: 'Segoe UI', sans-serif;
       background: #f5f7fb;
       display: flex;
-      height: 100vh;
+      height: calc(var(--vh, 1vh) * 100);
       overflow: hidden;
     }
 
@@ -55,27 +55,29 @@
       white-space: nowrap;
     }
 
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Ensures height on mobile */
+  overflow: hidden;
+}
+
+.messages {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0; /* CRITICAL for scroll in flex child */
+}
 
     .header {
       padding: 20px;
       font-size: 1.2rem;
       background: #fff;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-
-    .messages {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
     }
 
     .bubble {
@@ -200,18 +202,18 @@
 socket.on("chat-message", (msg) => {
   const messages = document.getElementById("messages");
 
-  // Create and append message
   const div = document.createElement("div");
   div.className = "bubble";
   if (msg.startsWith(username + ":")) div.classList.add("self");
   div.textContent = msg;
   messages.appendChild(div);
 
-  // Always scroll to bottom after message added
-  requestAnimationFrame(() => {
+  // Delay scroll to work reliably on mobile
+  setTimeout(() => {
     messages.scrollTop = messages.scrollHeight;
-  });
+  }, 50);
 });
+
 
 document.getElementById("chatForm").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -221,12 +223,14 @@ document.getElementById("chatForm").addEventListener("submit", (e) => {
   input.value = "";
 });
 
-window.addEventListener("load", () => {
-  const messages = document.getElementById("messages");
-  requestAnimationFrame(() => {
-    messages.scrollTop = messages.scrollHeight;
-  });
-});
+// Fix 100vh issue on mobile
+function setVH() {
+  const vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+window.addEventListener('resize', setVH);
+setVH();
+
 
 
 </script>
